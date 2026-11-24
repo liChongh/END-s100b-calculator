@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>24-Hour END Risk Calculator | Pre-thrombolysis S100β Model</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #162336;
+      --muted: #5a6b82;
+      --border: #dce4ef;
+      --primary: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --accent: #0f766e;
+      --low: #15803d;
+      --low-bg: #f0fdf4;
+      --mod: #b45309;
+      --mod-bg: #fffbeb;
+      --high: #b91c1c;
+      --high-bg: #fef2f2;
+      --shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px 44px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f294a 0%, #1b4478 100%);
+      color: #ffffff;
+      border-radius: var(--radius);
+      padding: 26px 30px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      color: #e2eeff;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 14px;
+      color: #d6e4f7;
+      max-width: 860px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.95fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    @media (max-width: 880px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .preset-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .btn-preset {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-preset:hover {
+      background: var(--primary-soft);
+      border-color: #93c5fd;
+      color: var(--primary);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .field-label {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .field-unit {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 104px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+      cursor: pointer;
+      height: 6px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: right;
+      background: #ffffff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .seg-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seg-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+    }
+
+    .range-hint {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #7c8ca3;
+      margin-top: 2px;
+    }
+
+    /* Result panel */
+    .result-box {
+      border-radius: 12px;
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      margin-bottom: 18px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .result-box.risk-low {
+      background: var(--low-bg);
+      border-color: #bbf7d0;
+    }
+
+    .result-box.risk-mod {
+      background: var(--mod-bg);
+      border-color: #fde68a;
+    }
+
+    .result-box.risk-high {
+      background: var(--high-bg);
+      border-color: #fecaca;
+    }
+
+    .result-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .prob-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .prob-value {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .risk-low .prob-value { color: var(--low); }
+    .risk-mod .prob-value { color: var(--mod); }
+    .risk-high .prob-value { color: var(--high); }
+
+    .risk-pill {
+      font-size: 12.5px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+    }
+
+    .risk-low .risk-pill { background: #dcfce7; color: var(--low); }
+    .risk-mod .risk-pill { background: #fef3c7; color: var(--mod); }
+    .risk-high .risk-pill { background: #fee2e2; color: var(--high); }
+
+    .gauge-track {
+      position: relative;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e 0%, #eab308 35%, #ef4444 75%, #991b1b 100%);
+      margin: 16px 0 6px;
+    }
+
+    .gauge-marker {
+      position: absolute;
+      top: -5px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3.5px solid #0f172a;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      transition: left 0.2s ease;
+    }
+
+    .gauge-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed rgba(15, 23, 42, 0.14);
+    }
+
+    .metric-item {
+      text-align: left;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .metric-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Contribution chart */
+    .contrib-section {
+      margin-bottom: 18px;
+    }
+
+    .contrib-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      margin: 0 0 4px;
+    }
+
+    .contrib-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    .contrib-row {
+      display: grid;
+      grid-template-columns: 122px 1fr 56px;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .contrib-name {
+      color: #334155;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contrib-bar-wrap {
+      position: relative;
+      height: 14px;
+      background: #f1f5f9;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .contrib-zero {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #94a3b8;
+      z-index: 2;
+    }
+
+    .contrib-bar {
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      border-radius: 3px;
+      transition: all 0.18s ease;
+    }
+
+    .contrib-bar.pos {
+      background: #dc2626;
+      left: 50%;
+    }
+
+    .contrib-bar.neg {
+      background: #0284c7;
+      right: 50%;
+    }
+
+    .contrib-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    /* Collapsible panels */
+    details {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      background: #fbfdff;
+    }
+
+    details:last-of-type {
+      margin-bottom: 0;
+    }
+
+    summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e3a5f;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    details[open] summary::after {
+      content: "−";
+    }
+
+    .details-body {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 12.5px;
+      color: #334155;
+    }
+
+    .recal-radio {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .recal-radio label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .recal-input-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      margin-left: 24px;
+    }
+
+    .recal-input-inline input {
+      width: 96px;
+      padding: 4px 8px;
+      font-size: 13px;
+    }
+
+    .equation-box {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11.5px;
+      background: #f1f5f9;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: #0f172a;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    .disclaimer {
+      margin-top: 22px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-left: 4px solid #64748b;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .disclaimer strong {
+      color: var(--text);
+    }
+
+    .warning-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 12px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge-row">
+        <span class="badge">Model C · Ridge-Penalized Logistic Model</span>
+        <span class="badge">7 Pre-thrombolysis Predictors</span>
+        <span class="badge">100% Local Browser Computation</span>
+      </div>
+      <h1>24-Hour Early Neurological Deterioration (END) Risk Calculator</h1>
+      <p>
+        Interactive clinical risk calculator integrating baseline clinical characteristics, routine laboratory markers, and pre-thrombolysis S100β to estimate 24-hour END probability in patients with acute ischemic stroke undergoing intravenous thrombolysis.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- Left Column: Inputs -->
+      <section class="card" aria-label="Patient predictors">
+        <div class="card-header">
+          <h2 class="card-title">Pre-thrombolysis Predictors</h2>
+          <div class="preset-group">
+            <button type="button" class="btn-preset" id="btnLow">Low-Risk Example</button>
+            <button type="button" class="btn-preset" id="btnHigh">High-Risk Example</button>
+            <button type="button" class="btn-preset" id="btnReset">Cohort Median</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="age">Age</label>
+            <span class="field-unit">years</span>
+          </div>
+          <div class="input-row">
+            <input type="range" id="ageRange" min="18" max="100" step="1" value="64" />
+            <input type="number" id="age" min="18" max="110" step="1" value="64" />
+          </div>
+          <div class="range-hint"><span>18</span><span>Development cohort range: 35–93</span><span>100</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <span class="field-label">Sex</span>
+            <span class="field-unit">Female = 0, Male = 1</span>
+          </div>
+          <div class="segmented" role="group" aria-label="Sex">
+            <button type="button" class="seg-btn" id="sexFemale" data-sex="0">Female</button>
+            <button type="button" class="seg-btn active" id="sexMale" data-sex="1">Male</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="nihss">Pre-thrombolysis NIHSS</label>
+            <span class="field-unit">points</span>
+          </div>
+          <div class="input-row">
+            <input type="range" id="nihssRange" min="0" max="25" step="1" value="7" />
+            <input type="number" id="nihss" min="0" max="42" step="1" value="7" />
+          </div>
+          <div class="range-hint"><span>0</span><span>Development IQR: 2–5 (non-END) vs. 4–9 (END)</span><span>25</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="monocytes">Monocyte Count</label>
+            <span class="field-unit">×10⁹/L</span>
+          </div>
+          <div class="input-row">
+            <input type="range" id="monocytesRange" min="0.10" max="1.50" step="0.01" value="0.45" />
+            <input type="number" id="monocytes" min="0.01" max="5.00" step="0.01" value="0.45" />
+          </div>
+          <div class="range-hint"><span>0.10</span><span>Development IQR: 0.32–0.59</span><span>1.50</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="hdl">HDL-C</label>
+            <span class="field-unit">mmol/L</span>
+          </div>
+          <div class="input-row">
+            <input type="range" id="hdlRange" min="0.40" max="2.20" step="0.01" value="0.85" />
+            <input type="number" id="hdl" min="0.10" max="4.00" step="0.01" value="0.85" />
+          </div>
+          <div class="range-hint"><span>0.40</span><span>Development IQR: 0.74–1.19</span><span>2.20</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="albumin">Serum Albumin</label>
+            <span class="field-unit">g/L</span>
+          </div>
+          <div class="input-row">
+            <input type="range" id="albuminRange" min="25.0" max="60.0" step="0.1" value="41.2" />
+            <input type="number" id="albumin" min="15.0" max="75.0" step="0.1" value="41.2" />
+          </div>
+          <div class="range-hint"><span>25.0</span><span>Development IQR: 38.9–45.3</span><span>60.0</span></div>
+        </div>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="s100b">Pre-thrombolysis S100β</label>
+            <span class="field-unit">pg/mL</span>
+          </div>
+          <div class="input-row">
+            <input type="range" id="s100bRange" min="10" max="220" step="0.1" value="92.6" />
+            <input type="number" id="s100b" min="0" max="1000" step="0.1" value="92.6" />
+          </div>
+          <div class="range-hint"><span>10</span><span>Development median: 74.5 (non-END) vs. 92.6 (END)</span><span>220</span></div>
+        </div>
+
+        <div class="warning-note" id="rangeWarning"></div>
+      </section>
+
+      <!-- Right Column: Prediction Output -->
+      <section class="card" aria-label="Predicted risk">
+        <div class="card-header">
+          <h2 class="card-title">Predicted 24-Hour END Risk</h2>
+          <span class="field-unit" id="modeBadge">Original Model (Δα = 0)</span>
+        </div>
+
+        <div class="result-box risk-high" id="resultBox">
+          <div class="result-eyebrow">Estimated 24-Hour END Probability</div>
+          <div class="prob-row">
+            <div class="prob-value" id="probDisplay">42.6%</div>
+            <span class="risk-pill" id="riskPill">High Risk (≥30%)</span>
+          </div>
+
+          <div class="gauge-track" aria-hidden="true">
+            <div class="gauge-marker" id="gaugeMarker" style="left: 42.6%;"></div>
+          </div>
+          <div class="gauge-labels">
+            <span>0%</span>
+            <span>20%</span>
+            <span>40%</span>
+            <span>60%</span>
+            <span>80%</span>
+            <span>100%</span>
+          </div>
+
+          <div class="metrics-strip">
+            <div class="metric-item">
+              <div class="metric-label">Linear Predictor (LP)</div>
+              <div class="metric-val" id="lpDisplay">-0.297</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Predicted Odds</div>
+              <div class="metric-val" id="oddsDisplay">0.743</div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Relative to Dev. Base</div>
+              <div class="metric-val" id="relDisplay">2.23×</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="contrib-section">
+          <h3 class="contrib-title">Predictor Contribution (Log-Odds vs. Cohort Reference)</h3>
+          <p class="contrib-sub">
+            Red bars increase predicted END log-odds; blue bars decrease log-odds relative to development cohort median profile.
+          </p>
+          <div id="contribContainer"></div>
+        </div>
+
+        <details>
+          <summary>Optional Local Intercept Recalibration</summary>
+          <div class="details-body">
+            <p style="margin-top:0;">
+              Because baseline END incidence may differ across centers or time periods (e.g., 19.12% in development vs. 25.21% in temporal validation), you may optionally apply an intercept shift (Δα) without altering predictor weights.
+            </p>
+            <div class="recal-radio">
+              <label>
+                <input type="radio" name="recalMode" value="none" checked />
+                Original development model (baseline END = 19.12%, Δα = 0)
+              </label>
+              <label>
+                <input type="radio" name="recalMode" value="temporal" />
+                Temporal validation intercept recalibration (Δα = +0.6809)
+              </label>
+              <label>
+                <input type="radio" name="recalMode" value="prevalence" />
+                Prior-odds shift using local baseline END incidence (%)
+              </label>
+              <div class="recal-input-inline" id="prevWrap" style="display:none;">
+                <span>Local END rate:</span>
+                <input type="number" id="localPrev" min="1" max="80" step="0.1" value="25.2" />
+                <span>%</span>
+              </div>
+              <label>
+                <input type="radio" name="recalMode" value="custom" />
+                Custom calibration intercept offset (Δα)
+              </label>
+              <div class="recal-input-inline" id="customWrap" style="display:none;">
+                <span>Δα:</span>
+                <input type="number" id="customDelta" min="-3" max="3" step="0.01" value="0.68" />
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Exact Ridge Regression Equation &amp; Model Performance</summary>
+          <div class="details-body">
+            <div class="equation-box">
+LP = -1.7822332024
+   + 0.0021732849 × Age (years)
+   + 0.5047706105 × Sex (Male=1, Female=0)
+   + 0.3322612776 × Pre-thrombolysis NIHSS
+   + 1.5880841508 × Monocytes (×10⁹/L)
+   - 1.2456729088 × HDL-C (mmol/L)
+   - 0.0476307554 × Albumin (g/L)
+   + 0.0088777776 × Pre-thrombolysis S100β (pg/mL)
+   [+ Δα if recalibrated]
+
+P(END) = 1 / [1 + exp(-LP)]
+            </div>
+            <p style="margin:10px 0 0; color:var(--muted);">
+              <strong>Internal validation (10×5-fold CV, n=272):</strong> AUC = 0.7910, Brier = 0.1280.<br />
+              <strong>Temporal validation (n=119):</strong> AUC = 0.8199 (95% CI: 0.7118–0.9096), Brier = 0.1414.
+            </p>
+          </div>
+        </details>
+      </section>
+    </div>
+
+    <footer class="disclaimer">
+      <strong>Disclaimer:</strong> This interactive calculator is provided for academic research and educational purposes only. All calculations are performed locally in your browser; no patient data are transmitted or stored. Risk estimates should not replace clinical judgment, and external multicenter validation with local intercept recalibration is recommended prior to routine clinical deployment.
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      // Exact locked Ridge regression coefficients from Supplementary Table S3 (Model C)
+      const COEF = {
+        intercept: -1.7822332024,
+        age: 0.0021732849,
+        sex: 0.5047706105,
+        nihss: 0.3322612776,
+        monocytes: 1.5880841508,
+        hdl: -1.2456729088,
+        albumin: -0.0476307554,
+        s100b: 0.0088777776
+      };
+
+      // Development cohort baseline prevalence: 52 / 272 = 0.19117647
+      const DEV_PREV = 52 / 272;
+      const DEV_LOGIT = Math.log(DEV_PREV / (1 - DEV_PREV));
+
+      // Development cohort reference (approximate overall medians) for contribution breakdown
+      const REF = {
+        age: 66.0,
+        sex: 0.643,
+        nihss: 3.0,
+        monocytes: 0.38,
+        hdl: 1.00,
+        albumin: 42.5,
+        s100b: 78.0
+      };
+
+      let sexValue = 1;
+
+      const fields = [
+        { id: "age", rangeId: "ageRange" },
+        { id: "nihss", rangeId: "nihssRange" },
+        { id: "monocytes", rangeId: "monocytesRange" },
+        { id: "hdl", rangeId: "hdlRange" },
+        { id: "albumin", rangeId: "albuminRange" },
+        { id: "s100b", rangeId: "s100bRange" }
+      ];
+
+      function clamp(val, min, max) {
+        return Math.min(Math.max(val, min), max);
+      }
+
+      function getDeltaAlpha() {
+        const mode = document.querySelector('input[name="recalMode"]:checked').value;
+        if (mode === "none") return { delta: 0, label: "Original Model (Δα = 0)" };
+        if (mode === "temporal") return { delta: 0.6809, label: "Temporal Recalibrated (Δα = +0.681)" };
+        if (mode === "prevalence") {
+          const pPct = clamp(parseFloat(document.getElementById("localPrev").value) || 19.12, 0.5, 95);
+          const p = pPct / 100;
+          const delta = Math.log(p / (1 - p)) - DEV_LOGIT;
+          return { delta, label: `Prior-Odds Recalibrated (Δα = ${delta >= 0 ? "+" : ""}${delta.toFixed(3)})` };
+        }
+        const custom = parseFloat(document.getElementById("customDelta").value) || 0;
+        return { delta: custom, label: `Custom Recalibrated (Δα = ${custom >= 0 ? "+" : ""}${custom.toFixed(3)})` };
+      }
+
+      function setSex(val) {
+        sexValue = val;
+        document.getElementById("sexFemale").classList.toggle("active", val === 0);
+        document.getElementById("sexMale").classList.toggle("active", val === 1);
+        update();
+      }
+
+      function applyPreset(preset) {
+        document.getElementById("age").value = preset.age;
+        document.getElementById("ageRange").value = clamp(preset.age, 18, 100);
+        document.getElementById("nihss").value = preset.nihss;
+        document.getElementById("nihssRange").value = clamp(preset.nihss, 0, 25);
+        document.getElementById("monocytes").value = preset.monocytes;
+        document.getElementById("monocytesRange").value = clamp(preset.monocytes, 0.1, 1.5);
+        document.getElementById("hdl").value = preset.hdl;
+        document.getElementById("hdlRange").value = clamp(preset.hdl, 0.4, 2.2);
+        document.getElementById("albumin").value = preset.albumin;
+        document.getElementById("albuminRange").value = clamp(preset.albumin, 25, 60);
+        document.getElementById("s100b").value = preset.s100b;
+        document.getElementById("s100bRange").value = clamp(preset.s100b, 10, 220);
+        setSex(preset.sex);
+      }
+
+      function renderContributions(vals) {
+        const items = [
+          { name: "NIHSS", diff: COEF.nihss * (vals.nihss - REF.nihss) },
+          { name: "S100β", diff: COEF.s100b * (vals.s100b - REF.s100b) },
+          { name: "HDL-C", diff: COEF.hdl * (vals.hdl - REF.hdl) },
+          { name: "Monocytes", diff: COEF.monocytes * (vals.monocytes - REF.monocytes) },
+          { name: "Sex", diff: COEF.sex * (vals.sex - REF.sex) },
+          { name: "Albumin", diff: COEF.albumin * (vals.albumin - REF.albumin) },
+          { name: "Age", diff: COEF.age * (vals.age - REF.age) }
+        ];
+
+        const maxAbs = Math.max(1.2, ...items.map((i) => Math.abs(i.diff)));
+        const container = document.getElementById("contribContainer");
+        container.innerHTML = items
+          .map((item) => {
+            const pct = Math.min(48, (Math.abs(item.diff) / maxAbs) * 48);
+            const cls = item.diff >= 0 ? "pos" : "neg";
+            const sign = item.diff >= 0 ? "+" : "";
+            return `
+              <div class="contrib-row">
+                <span class="contrib-name">${item.name}</span>
+                <div class="contrib-bar-wrap">
+                  <div class="contrib-zero"></div>
+                  <div class="contrib-bar ${cls}" style="width: ${pct.toFixed(1)}%;"></div>
+                </div>
+                <span class="contrib-num">${sign}${item.diff.toFixed(2)}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function update() {
+        const vals = {
+          age: parseFloat(document.getElementById("age").value) || 0,
+          sex: sexValue,
+          nihss: parseFloat(document.getElementById("nihss").value) || 0,
+          monocytes: parseFloat(document.getElementById("monocytes").value) || 0,
+          hdl: parseFloat(document.getElementById("hdl").value) || 0,
+          albumin: parseFloat(document.getElementById("albumin").value) || 0,
+          s100b: parseFloat(document.getElementById("s100b").value) || 0
+        };
+
+        // Extrapolation notice if outside typical development range
+        const warnings = [];
+        if (vals.nihss > 12) warnings.push("NIHSS > 12 (above primary nomogram range)");
+        if (vals.s100b > 180) warnings.push("S100β > 180 pg/mL (extrapolated beyond typical cohort range)");
+        const warnEl = document.getElementById("rangeWarning");
+        if (warnings.length > 0) {
+          warnEl.style.display = "block";
+          warnEl.textContent = "Note: Input includes values outside the core development range (" + warnings.join("; ") + "). Interpret with caution.";
+        } else {
+          warnEl.style.display = "none";
+        }
+
+        const { delta, label } = getDeltaAlpha();
+        document.getElementById("modeBadge").textContent = label;
+
+        const lp =
+          COEF.intercept +
+          COEF.age * vals.age +
+          COEF.sex * vals.sex +
+          COEF.nihss * vals.nihss +
+          COEF.monocytes * vals.monocytes +
+          COEF.hdl * vals.hdl +
+          COEF.albumin * vals.albumin +
+          COEF.s100b * vals.s100b +
+          delta;
+
+        const prob = 1 / (1 + Math.exp(-lp));
+        const probPct = prob * 100;
+        const odds = Math.exp(lp);
+        const rel = prob / DEV_PREV;
+
+        document.getElementById("probDisplay").textContent = probPct.toFixed(1) + "%";
+        document.getElementById("lpDisplay").textContent = lp.toFixed(3);
+        document.getElementById("oddsDisplay").textContent = odds < 100 ? odds.toFixed(3) : odds.toFixed(1);
+        document.getElementById("relDisplay").textContent = rel.toFixed(2) + "×";
+        document.getElementById("gaugeMarker").style.left = clamp(probPct, 0, 100).toFixed(1) + "%";
+
+        const box = document.getElementById("resultBox");
+        const pill = document.getElementById("riskPill");
+        box.classList.remove("risk-low", "risk-mod", "risk-high");
+        if (probPct < 15) {
+          box.classList.add("risk-low");
+          pill.textContent = "Lower Risk (<15%)";
+        } else if (probPct < 30) {
+          box.classList.add("risk-mod");
+          pill.textContent = "Intermediate Risk (15%–30%)";
+        } else {
+          box.classList.add("risk-high");
+          pill.textContent = "Elevated Risk (≥30%)";
+        }
+
+        renderContributions(vals);
+      }
+
+      // Bind synchronized range & number inputs
+      fields.forEach(({ id, rangeId }) => {
+        const numEl = document.getElementById(id);
+        const rangeEl = document.getElementById(rangeId);
+
+        rangeEl.addEventListener("input", () => {
+          numEl.value = rangeEl.value;
+          update();
+        });
+
+        numEl.addEventListener("input", () => {
+          const v = parseFloat(numEl.value);
+          if (!Number.isNaN(v)) {
+            rangeEl.value = clamp(v, parseFloat(rangeEl.min), parseFloat(rangeEl.max));
+          }
+          update();
+        });
+      });
+
+      document.getElementById("sexFemale").addEventListener("click", () => setSex(0));
+      document.getElementById("sexMale").addEventListener("click", () => setSex(1));
+
+      document.getElementById("btnLow").addEventListener("click", () => {
+        applyPreset({ age: 67, sex: 0, nihss: 3, monocytes: 0.36, hdl: 1.04, albumin: 42.8, s100b: 74.5 });
+      });
+
+      document.getElementById("btnHigh").addEventListener("click", () => {
+        applyPreset({ age: 64, sex: 1, nihss: 7, monocytes: 0.45, hdl: 0.85, albumin: 41.2, s100b: 92.6 });
+      });
+
+      document.getElementById("btnReset").addEventListener("click", () => {
+        applyPreset({ age: 66, sex: 1, nihss: 4, monocytes: 0.38, hdl: 1.00, albumin: 42.5, s100b: 78.0 });
+      });
+
+      document.querySelectorAll('input[name="recalMode"]').forEach((radio) => {
+        radio.addEventListener("change", () => {
+          const mode = document.querySelector('input[name="recalMode"]:checked').value;
+          document.getElementById("prevWrap").style.display = mode === "prevalence" ? "flex" : "none";
+          document.getElementById("customWrap").style.display = mode === "custom" ? "flex" : "none";
+          update();
+        });
+      });
+
+      document.getElementById("localPrev").addEventListener("input", update);
+      document.getElementById("customDelta").addEventListener("input", update);
+
+      // Initial render (typical END example from Table 1 medians)
+      update();
+    })();
+  </script>
+</body>
+</html>
